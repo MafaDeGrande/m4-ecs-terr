@@ -1,13 +1,27 @@
+variable "private_subnet_ids" {
+  type        = list(string)
+  description = "VPC subnet ID for the cache subnet group"
+}
+
+variable "vpc_id" {
+  type        = string
+  description = "The ID of the VPC"
+}
+
+variable "group_name" {
+  description = "The name of the security and subnet groups"
+  type        = string
+}
+
 variable "tags" {
   description = "A map of tags to assign to the resource"
   type        = map(string)
   default     = null
 }
 
-variable "domain" {
-  description = "The domain name"
+variable "db_name" {
+  description = "Database name"
   type        = string
-  default     = "ipp.gzttk.org"
 }
 
 variable "db_username" {
@@ -20,16 +34,4 @@ variable "db_password" {
   description = "Database administrator password"
   type        = string
   sensitive   = true
-}
-
-variable "ACCESS_TOKEN_SALT" {
-  description = "Example of the access token for the app"
-  type = string
-  sensitive = true
-}
-
-variable "JWT_SECRET_KEY" {
-  description = "Example of the jwt key for the app"
-  type = string
-  sensitive = true
 }

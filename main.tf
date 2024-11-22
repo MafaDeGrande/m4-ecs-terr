@@ -40,7 +40,7 @@ module "vpc" {
 }
 
 module "ecs" {
-  source = "./modules/ecs"
+  source = "./modules/ecs/"
   #cluster_name = "ecs-${local.name}"
 }
 
@@ -66,4 +66,38 @@ module "app_load_balancer" {
   name          = "${local.name}-alb"
   subnets       = module.vpc.public_subnets
   vpc_id        = module.vpc.vpc_id
+}
+
+module "elasticache" {
+  source                 = "./modules/elasticache/"
+  vpc_id                 = module.vpc.vpc_id
+  cluster_id             = "cluster-cache"
+  private_subnet_id      = module.vpc.private_subnets[0]
+  elasticache_group_name = "cache-subnet"
+  security_group_name    = "elasticache-sg"
+}
+
+module "rds" {
+  source             = "./modules/rds/"
+  vpc_id             = module.vpc.vpc_id
+  private_subnet_ids = module.vpc.private_subnets
+  group_name         = "db-postgresql-sg"
+  db_name            = "ghostfolio"
+  db_username        = var.db_username
+  db_password        = var.db_password
+}
+
+resource "local_file" "env_file" {
+  filename = "${path.module}/.env"
+
+  content = <<EOT
+POSTGRES_DB="${module.rds.db_name}"
+POSTGRES_USER="${module.rds.db_username}"
+POSTGRES_PASSWORD="${module.rds.db_password}"
+DATABASE_URL="postgresql://${module.rds.db_username}:${module.rds.db_password}@${module.rds.endpoint}/${module.rds.db_name}"
+REDIS_HOST="${module.elasticache.redis_endpoint}"
+REDIS_PORT="${module.elasticache.redis_port}"
+ACCESS_TOKEN_SALT="${var.ACCESS_TOKEN_SALT}"
+JWT_SECRET_KEY="${var.JWT_SECRET_KEY}"
+EOT
 }
