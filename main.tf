@@ -38,3 +38,32 @@ module "vpc" {
   enable_vpn_gateway = false
   tags = var.tags
 }
+
+module "ecs" {
+  source = "./modules/ecs"
+  #cluster_name = "ecs-${local.name}"
+}
+
+module "aws_key_pair" {
+  source   = "./modules/key_pair/"
+  key_name = "tf_key"
+}
+
+module "autoscaling_group" {
+  source              = "./modules/autoscaling_group/"
+  name                = "${local.name}-asg"
+  env                 = local.env
+  #cluster_name        = module.ecs.cluster_name
+  key_name            = module.aws_key_pair.tf_key
+  vpc_zone_identifier = module.vpc.public_subnets
+  vpc_id              = module.vpc.vpc_id
+  alb_arn             = module.app_load_balancer.alb_arn
+  depends_on = [module.app_load_balancer]
+}
+
+module "app_load_balancer" {
+  source        = "./modules/app_load_balancer/"
+  name          = "${local.name}-alb"
+  subnets       = module.vpc.public_subnets
+  vpc_id        = module.vpc.vpc_id
+}
