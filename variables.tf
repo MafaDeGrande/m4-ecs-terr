@@ -24,12 +24,17 @@ variable "db_password" {
 
 variable "ACCESS_TOKEN_SALT" {
   description = "Example of the access token for the app"
-  type = string
-  sensitive = true
+  type        = string
+  sensitive   = true
 }
 
 variable "JWT_SECRET_KEY" {
   description = "Example of the jwt key for the app"
+  type        = string
+  sensitive   = true
+}
+
+variable "image" {
   type = string
-  sensitive = true
+  description = "Image of the app"
 }

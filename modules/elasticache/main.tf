@@ -6,9 +6,9 @@ resource "aws_elasticache_cluster" "redis" {
   parameter_group_name = "default.redis7"
   engine_version       = "7.1"
   port                 = 6379
-  subnet_group_name = aws_elasticache_subnet_group.subnet.name
-  security_group_ids = [aws_security_group.elasticache_sg.id]
-  tags        = var.tags
+  subnet_group_name    = aws_elasticache_subnet_group.subnet.name
+  security_group_ids   = [aws_security_group.elasticache_sg.id]
+  tags                 = var.tags
 }
 
 resource "aws_elasticache_subnet_group" "subnet" {
@@ -25,13 +25,13 @@ resource "aws_security_group" "elasticache_sg" {
     from_port   = 6379
     to_port     = 6379
     protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]  
+    cidr_blocks = ["10.0.0.0/16"]
   }
 
   egress {
     from_port   = 0
     to_port     = 0
-    protocol    = "-1"  
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }

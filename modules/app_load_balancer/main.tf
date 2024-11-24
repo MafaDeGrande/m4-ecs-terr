@@ -1,25 +1,25 @@
 module "alb" {
-  source                        = "terraform-aws-modules/alb/aws"
-  version                       = "9.11.0"
+  source  = "terraform-aws-modules/alb/aws"
+  version = "9.11.0"
 
-  name                          = var.name
-  vpc_id                        = var.vpc_id
-  subnets                       = var.subnets
-  enable_deletion_protection    = false
+  name                       = var.name
+  vpc_id                     = var.vpc_id
+  subnets                    = var.subnets
+  enable_deletion_protection = false
 
   listeners = {
     ex-http = {
-      port = 80
+      port     = 80
       protocol = "HTTP"
       redirect = {
-        port = "443"
-        protocol = "HTTPS"
+        port        = "443"
+        protocol    = "HTTPS"
         status_code = "HTTP_301"
       }
     }
     ex-https = {
-      port = 443
-      protocol = "HTTPS"
+      port            = 443
+      protocol        = "HTTPS"
       certificate_arn = module.acm.acm_certificate_arn
       forward = {
         target_group_key = "ex-instance"
@@ -29,15 +29,15 @@ module "alb" {
 
   target_groups = {
     ex-instance = {
-    name        = var.name
-    port        = 80
-    protocol    = "HTTP"
-    target_type = "instance"
-    create_attachment = false
-  }
+      name              = var.name
+      port              = 80
+      protocol          = "HTTP"
+      target_type       = "instance"
+      create_attachment = false
+    }
   }
 
-#Security Group
+  #Security Group
   security_group_ingress_rules = {
     all_http = {
       from_port   = 80
@@ -73,9 +73,9 @@ module "acm" {
   source  = "terraform-aws-modules/acm/aws"
   version = "~> 4.0"
 
-  domain_name  = var.domain
-  zone_id      = data.aws_route53_zone.selected.zone_id
+  domain_name = var.domain
+  zone_id     = data.aws_route53_zone.selected.zone_id
 
-  validation_method = "DNS"
+  validation_method   = "DNS"
   wait_for_validation = true
 }

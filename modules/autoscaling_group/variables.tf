@@ -15,13 +15,13 @@ variable "name" {
   description = "Name of the Auto Scaling Group"
 }
 
-#variable "cluster_name" {
-#  type = string
-#  description = "Name of the ecs cluster"
-#}
+variable "cluster_name" {
+  type = string
+  description = "Name of the ecs cluster"
+}
 
 variable "env" {
-  type = string
+  type        = string
   description = "Name of the environment"
 }
 

@@ -23,7 +23,7 @@ data "aws_availability_zones" "available" {
 
 locals {
   name = "ghostfolio-app"
-  env = "dev"
+  env  = "dev"
 }
 
 module "vpc" {
@@ -36,12 +36,19 @@ module "vpc" {
   public_subnets     = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
   enable_nat_gateway = false
   enable_vpn_gateway = false
-  tags = var.tags
+  tags               = var.tags
 }
 
 module "ecs" {
-  source = "./modules/ecs/"
-  #cluster_name = "ecs-${local.name}"
+  source       = "./modules/ecs/"
+  cluster_name = "ecs-${local.name}"
+  env          = local.env
+  asg_arn      = module.autoscaling_group.asg_arn
+  alb_arn      = module.app_load_balancer.alb_arn
+  image        = var.image 
+  public_subnet_ids = module.vpc.public_subnets
+  alb_security_group_id = module.app_load_balancer.security_group_id
+  s3_bucket_arn = module.s3.s3_bucket_arn
 }
 
 module "aws_key_pair" {
@@ -53,19 +60,19 @@ module "autoscaling_group" {
   source              = "./modules/autoscaling_group/"
   name                = "${local.name}-asg"
   env                 = local.env
-  #cluster_name        = module.ecs.cluster_name
+  cluster_name        = module.ecs.cluster_name
   key_name            = module.aws_key_pair.tf_key
   vpc_zone_identifier = module.vpc.public_subnets
   vpc_id              = module.vpc.vpc_id
   alb_arn             = module.app_load_balancer.alb_arn
-  depends_on = [module.app_load_balancer]
+  depends_on          = [module.app_load_balancer]
 }
 
 module "app_load_balancer" {
-  source        = "./modules/app_load_balancer/"
-  name          = "${local.name}-alb"
-  subnets       = module.vpc.public_subnets
-  vpc_id        = module.vpc.vpc_id
+  source  = "./modules/app_load_balancer/"
+  name    = "${local.name}-alb"
+  subnets = module.vpc.public_subnets
+  vpc_id  = module.vpc.vpc_id
 }
 
 module "elasticache" {
@@ -87,14 +94,20 @@ module "rds" {
   db_password        = var.db_password
 }
 
+module "s3" {
+  source      = "./modules/s3/"
+  bucket_name = "${local.name}-env-file"
+  depends_on  = [local_file.env_file]
+}
+
 resource "local_file" "env_file" {
-  filename = "${path.module}/.env"
+  filename = "${path.cwd}/.env"
 
   content = <<EOT
 POSTGRES_DB="${module.rds.db_name}"
 POSTGRES_USER="${module.rds.db_username}"
 POSTGRES_PASSWORD="${module.rds.db_password}"
-DATABASE_URL="postgresql://${module.rds.db_username}:${module.rds.db_password}@${module.rds.endpoint}/${module.rds.db_name}"
+DATABASE_URL="postgresql://${module.rds.db_username}:${module.rds.db_password}@${module.rds.endpoint}:5432/${module.rds.db_name}"
 REDIS_HOST="${module.elasticache.redis_endpoint}"
 REDIS_PORT="${module.elasticache.redis_port}"
 ACCESS_TOKEN_SALT="${var.ACCESS_TOKEN_SALT}"
