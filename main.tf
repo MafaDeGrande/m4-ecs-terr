@@ -46,6 +46,7 @@ module "ecs" {
   asg_arn      = module.autoscaling_group.asg_arn
   alb_arn      = module.app_load_balancer.alb_arn
   image        = var.image 
+  task_family  = "my-task-family:2"
   public_subnet_ids = module.vpc.public_subnets
   alb_security_group_id = module.app_load_balancer.security_group_id
   s3_bucket_arn = module.s3.s3_bucket_arn
@@ -62,7 +63,7 @@ module "autoscaling_group" {
   env                 = local.env
   cluster_name        = module.ecs.cluster_name
   key_name            = module.aws_key_pair.tf_key
-  vpc_zone_identifier = module.vpc.public_subnets
+  subnet_ids          = module.vpc.public_subnets
   vpc_id              = module.vpc.vpc_id
   alb_arn             = module.app_load_balancer.alb_arn
   depends_on          = [module.app_load_balancer]

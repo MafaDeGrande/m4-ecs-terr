@@ -30,7 +30,7 @@ variable "key_name" {
   description = "The name for the key pair"
 }
 
-variable "vpc_zone_identifier" {
+variable "subnet_ids" {
   type        = list(string)
   description = "List of subnet IDs to launch resources in"
 }

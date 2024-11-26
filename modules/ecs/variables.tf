@@ -37,3 +37,8 @@ variable "s3_bucket_arn" {
   type = string
   description = "The ARN of the bucket. Will be of format arn:aws:s3:::bucketname"
 }
+
+variable "task_family" {
+  type = string
+  description = "Family for the latest ACTIVE revision, family and revision (family:revision) "
+}

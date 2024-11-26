@@ -27,34 +27,13 @@ module "ecs_service" {
   cluster_arn = module.ecs_cluster.arn
   requires_compatibilities = ["EC2"]
   create_task_exec_iam_role = false
-  task_exec_iam_role_arn = aws_iam_role.ecs_exec.arn
+  task_definition_arn = data.aws_ecs_task_definition.task_defi.arn 
 
   capacity_provider_strategy = {
     ex_1 = {
       capacity_provider = module.ecs_cluster.autoscaling_capacity_providers["ex_1"].name
       weight = 1
       base   = 1
-    }
-  }
-
-  container_definitions = {
-    (local.container_name) = {
-      cpu = 512
-      memory = 1024
-      image = local.image_uri
-      environment_files = [
-        {
-          value = "${var.s3_bucket_arn}/.env"
-          type = "s3"
-        }
-      ]
-      port_mappings = [
-        {
-          name = local.container_name
-          containerPort = local.container_port
-          protocol = "tcp"
-        }
-      ]
     }
   }
 
@@ -88,57 +67,6 @@ module "ecs_service" {
   tags = local.tags
 }
 
-resource "aws_iam_role" "ecs_exec" {
-  name = "ecsTaskExecutionRole"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Sid    = ""
-      Principal = {
-        Service = "ecs-tasks.amazonaws.com"
-      }
-      }
-    ]
-  })
+data "aws_ecs_task_definition" "task_defi" {
+  task_definition = var.task_family 
 }
-
-resource "aws_iam_policy" "ecs_policy" {
-  name        = aws_iam_role.ecs_exec.name
-  description = "Policy for ECS to access services"
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-        Effect   = "Allow"
-        Action   = [
-          "s3:GetObject"
-        ]
-        Resource = [
-          "${var.s3_bucket_arn}/.env"
-      ]
-      },
-      {
-        Effect   = "Allow"
-        Action   = [
-          "s3:GetBucketLocation"
-        ]
-        Resource = [
-          "${var.s3_bucket_arn}"
-      ]
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_policy" {
-  role = aws_iam_role.ecs_exec.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
-
-resource "aws_iam_role_policy_attachment" "s3_policy" {
-  role = aws_iam_role.ecs_exec.name
-  policy_arn = aws_iam_policy.ecs_policy.arn
-}
-

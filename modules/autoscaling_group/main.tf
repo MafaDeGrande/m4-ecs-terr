@@ -9,7 +9,7 @@ resource "aws_launch_template" "template_finance_app" {
     security_groups             = [aws_security_group.allow_tls.id]
   }
 
-  user_data = filebase64("${path.cwd}/userdata.sh")
+  user_data = filebase64("${path.module}/assets/userdata.sh")
 }
 
 resource "aws_autoscaling_attachment" "asg_attachment" {
@@ -19,7 +19,7 @@ resource "aws_autoscaling_attachment" "asg_attachment" {
 
 resource "aws_autoscaling_group" "finance_app" {
   name                = local.name
-  vpc_zone_identifier = var.vpc_zone_identifier
+  vpc_zone_identifier = var.subnet_ids
   desired_capacity    = 1
   max_size            = 2
   min_size            = 1
